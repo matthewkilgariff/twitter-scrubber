@@ -1,8 +1,5 @@
 import bs4 as bs
 import datetime as dt 
-import matplotlib.pyplot as plt 
-from matplotlib import style
-from mplfinance.original_flavor import candlestick_ohlc
 import numpy as np
 import os
 import os.path
@@ -11,12 +8,9 @@ import pandas as pd
 import pandas_datareader.data as web
 import pickle
 import requests
-
 import yfinance as yf
 
 yf.pdr_override()
-
-style.use('ggplot')
 
 def save_sp500_tickers():
     #grab source code from wikipedia
@@ -109,6 +103,9 @@ def compile_data():
     print(main_df.head())
     main_df.to_csv('sp500_joined_closes.csv')
 
+'''
+Testing
+'''
 start = dt.datetime(2020,1,1)
 end = dt.datetime(2020,7,31)
 
