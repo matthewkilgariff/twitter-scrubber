@@ -29,12 +29,14 @@ api = twitter.Api(consumer_key=API_KEY(),
     
 
 # Pull tweets given a ticker and start and end dates.
-def pull_tweets(ticker, start, end):
+def pull_tweets(ticker, start, end, premium=False):
     start = start.strftime("%Y-%m-%d")
     end = end.strftime("%Y-%m-%d")
-    return api.GetSearch(raw_query="q={}".format(ticker))
-    # This is what I would return if I premium access
-    #return api.GetSearch(raw_query="q={}%20since%3Astart%20until%3Aend")
+    if not premium:
+        return api.GetSearch(raw_query="q={}".format(ticker))
+    # This is what I would return if I had premium access
+    else:
+        return api.GetSearch(raw_query="q={}%20since%3Astart%20until%3Aend")
 
 # Pulls tweets, then returns a list of tuples corresponding with each tweets 
 # polarity (ranges from -1 to 1) and objectivity (ranges from 0 to 1).
@@ -44,7 +46,8 @@ def get_sentiment(ticker, start, end):
     tweets = pull_tweets(ticker, start, end)
     sentiments = []
     for tweet in tweets:
-        sentiments.append(TextBlob(tweet.text))
+        sent = TextBlob(tweet.text)
+        sentiments.append((sent.polarity, sent.subjectivity))
     return sentiments
 
 # 
@@ -59,3 +62,9 @@ def sentiment_metadata(ticker, start, end):
     average_sentiment /= length
     average_subjectivity /= length
     return average_sentiment, average_subjectivity, length
+
+start = dt.datetime(2020,8,1)
+end = dt.datetime(2020,8,2)
+
+sentiment = sentiment_metadata("TSLA", start, end)
+print(sentiment)
