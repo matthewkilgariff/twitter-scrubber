@@ -33,10 +33,10 @@ def pull_tweets(ticker, start, end, premium=False):
     start = start.strftime("%Y-%m-%d")
     end = end.strftime("%Y-%m-%d")
     if not premium:
-        return api.GetSearch(raw_query="q={}".format(ticker))
+        return api.GetSearch(raw_query="q=${}".format(ticker))
     # This is what I would return if I had premium access
     else:
-        return api.GetSearch(raw_query="q={}%20since%3Astart%20until%3Aend")
+        return api.GetSearch(raw_query="q=${}%20since%3Astart%20until%3Aend")
 
 # Pulls tweets, then returns a list of tuples corresponding with each tweets 
 # polarity (ranges from -1 to 1) and objectivity (ranges from 0 to 1).
@@ -63,8 +63,8 @@ def sentiment_metadata(ticker, start, end):
     average_subjectivity /= length
     return average_sentiment, average_subjectivity, length
 
-start = dt.datetime(2020,8,1)
-end = dt.datetime(2020,8,2)
+# start = dt.datetime(2020,8,1)
+# end = dt.datetime(2020,8,2)
 
-sentiment = sentiment_metadata("TSLA", start, end)
-print(sentiment)
+# sentiment = sentiment_metadata("TSLA", start, end)
+# print(sentiment)
