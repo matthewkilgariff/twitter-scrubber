@@ -21,11 +21,29 @@ def save_sp500_tickers():
     tickers = []
     for row in table.findAll('tr')[1:]:
         ticker = row.findAll('td')[0].text.replace('\n','')
-        #wikipedia uses BRK.B when yahoo uses BRK-B so yur
+        #wikipedia uses BRK.B when yahoo uses BRK-B so 
         mapping = str.maketrans('.','-')
         ticker = ticker.translate(mapping)
         tickers.append(ticker)
     with open('sp500tickers.pickle','wb') as f:
+        pickle.dump(tickers, f)
+    print(tickers)
+    return tickers
+
+# Same method as above but with the S&P 100, to avoid twitter rate limits
+def save_sp100_tickers():
+    resp = requests.get('https://en.wikipedia.org/wiki/S%26P_100#Components')
+    #creating bs object
+    soup = bs.BeautifulSoup(resp.text)
+    table = soup.find('table', {'class':'wikitable sortable'})
+    tickers = []
+    for row in table.findAll('tr')[1:]:
+        ticker = row.findAll('td')[0].text.replace('\n','')
+        #wikipedia uses BRK.B when yahoo uses BRK-B so 
+        mapping = str.maketrans('.','-')
+        ticker = ticker.translate(mapping)
+        tickers.append(ticker)
+    with open('sp100tickers.pickle','wb') as f:
         pickle.dump(tickers, f)
     print(tickers)
     return tickers
@@ -41,6 +59,27 @@ def get_data_from_yahoo(start, end, reload_sp500=False,):
         tickers = save_sp500_tickers()
     else:
         with open('sp500tickers.pickle','rb') as f:
+            tickers = pickle.load(f)
+    
+    if not os.path.exists('stock_dfs'):
+        os.makedirs('stock_dfs')
+
+    # gets data for all 500 companies. Might want to do tickers[:100] 
+    # or something if you don't need all 500 companies
+    for ticker in tickers:
+        print(ticker)
+        if not os.path.exists('stock_dfs/{}.csv'.format(ticker)):
+            df = web.get_data_yahoo(ticker, start, end)
+            df.to_csv('stock_dfs/{}.csv'.format(ticker))
+        else:
+            print('Already have {}'.format(ticker))
+
+# Same as above but with S&P 100
+def get_data_from_yahoo_100(start, end, reload_sp100=False):
+    if reload_sp100:
+        tickers = save_sp100_tickers()
+    else:
+        with open('sp100tickers.pickle','rb') as f:
             tickers = pickle.load(f)
     
     if not os.path.exists('stock_dfs'):
@@ -103,11 +142,48 @@ def compile_data():
     print(main_df.head())
     main_df.to_csv('sp500_joined_closes.csv')
 
+# Same as above but with S&P 100
+def compile_data_100():
+    with open('sp100tickers.pickle','rb') as f:
+        tickers = pickle.load(f)
+    
+    print(type(tickers))
+    main_df = pd.DataFrame()
+
+    ticks = enumerate(tickers)
+    for c, ticker in enumerate(tickers):
+        if not path.exists("stock_dfs/{}.csv".format(ticker)):
+            continue
+
+    # enumerate() returns 0,A then 1,B 2,C etc so you can see where youre at 
+    for count,ticker in enumerate(tickers):
+        if not path.exists("stock_dfs/{}.csv".format(ticker)):
+            continue
+        df = pd.read_csv('stock_dfs/{}.csv'.format(ticker))
+        df.set_index('Date', inplace=True)
+        
+        df.rename(columns = {'Adj Close': ticker}, inplace=True)
+        #Drop other columns w/ Adj Close w/ axis 1
+        df.drop(['Open','High','Low','Close','Volume'], 1, inplace=True)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            #lookup in the panda documentation on why to use outer
+            main_df = main_df.join(df, how='outer')
+        
+        #just to see where we at
+        if count % 10 == 0:
+            print(count)
+
+    print(main_df.head())
+    main_df.to_csv('sp100_joined_closes.csv')
 '''
 Testing
 '''
-start = dt.datetime(2020,1,1)
-end = dt.datetime(2020,7,31)
+start = dt.datetime(2020,8,28)
+end = dt.datetime(2020,9,30)
 
-get_data_from_yahoo(start, end, True)
-compile_data()
+save_sp100_tickers()
+get_data_from_yahoo_100(start, end, True)
+compile_data_100()

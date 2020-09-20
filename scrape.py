@@ -12,7 +12,8 @@ import os.path
 from os import path
 import pandas as pd 
 import pickle
-from stock_price import save_sp500_tickers
+import sched
+from stock_price import save_sp100_tickers
 from textblob import TextBlob
 import time
 import twitter
@@ -42,6 +43,8 @@ def combine_tweets(ticker):
     if not os.path.exists("tweets"):
         sys.exit("No data saved.")
     if not os.path.exists("tweets/{}-{}.csv".format(ticker, dt.now().date())):
+        # Fix this functionality
+        return
         sys.exit("Today's data not saved.")
     if os.path.exists("tweets/{}-combined.csv".format(ticker)):
         df_old = pd.read_csv("tweets/{}-combined.csv".format(ticker))
@@ -57,9 +60,9 @@ def combine_tweets(ticker):
 
 # Let's get some data
 def get_init_data():
-    if not os.path.exists("sp500tickers.pickle"):
-        save_sp500_tickers()
-    with open("sp500tickers.pickle","rb") as f:
+    if not os.path.exists("sp100tickers.pickle".format()):
+        save_sp100_tickers()
+    with open("sp100tickers.pickle","rb") as f:
         tickers = pickle.load(f)
     for ticker in tickers:
         if os.path.exists("tweets/{}-{}.csv".format(ticker, dt.now().date())):
@@ -69,21 +72,21 @@ def get_init_data():
         print("Scraped: ", ticker)
 
 def get_combined():
-    if not os.path.exists("sp500tickers.pickle"):
-        save_sp500_tickers()
-    with open("sp500tickers.pickle","rb") as f:
+    if not os.path.exists("sp100tickers.pickle"):
+        save_sp100_tickers()
+    with open("sp100tickers.pickle","rb") as f:
         tickers = pickle.load(f)
     for ticker in tickers:
-        if os.path.exists("tweets/{}-combined.csv".format(ticker)):
-            print("Already scraped: ", ticker)
-            continue
+        # if os.path.exists("tweets/{}-combined.csv".format(ticker)):
+        #     print("Already scraped: ", ticker)
+        #     continue
         combine_tweets(ticker)
         print("Combined: ", ticker)
 
 def run_everyday():
-    if not os.path.exists("sp500tickers.pickle"):
-        save_sp500_tickers()
-    with open("sp500tickers.pickle","rb") as f:
+    if not os.path.exists("sp100tickers.pickle"):
+        save_sp100_tickers()
+    with open("sp100tickers.pickle","rb") as f:
         tickers = pickle.load(f)
     for ticker in tickers:
         schedule.every().day.at("20:30").do(get_combined(ticker))
